@@ -118,7 +118,9 @@
 }
 .SearchBox input::placeholder { color: var(--awm-muted); opacity: 1; }
 
-.BngFilter {
+
+
+.BoxFilter {
   box-sizing: border-box;
   display: flex;
   flex: 0 0 auto;
@@ -131,21 +133,21 @@
   background: var(--awm-surface);
 }
 
-.BngFilter:focus-within {
+.BoxFilter:focus-within {
   border-color: var(--awm-primary);
   outline: 2px solid var(--awm-primary);
   outline-offset: 1px;
 }
 
-.BngFilterLabel {
+.BoxFilterLabel {
   color: var(--awm-muted);
   font: 500 12px var(--awm-font-sans);
   white-space: nowrap;
 }
 
-.BngPicker { width: 140px; }
+.BoxPicker { width: 140px; }
 
-.BngFilter .BngPicker :global(.rs-picker-toggle) {
+.BoxFilter .BoxPicker :global(.rs-picker-toggle) {
   height: 26px !important;
   min-height: 26px;
   padding: 0 18px 0 0 !important;
@@ -157,14 +159,14 @@
   font: 600 12px var(--awm-font-sans) !important;
 }
 
-.BngPicker :global(.rs-picker-toggle:focus),
-.BngPicker :global(.rs-picker-toggle:focus-visible) {
+.BoxPicker :global(.rs-picker-toggle:focus),
+.BoxPicker :global(.rs-picker-toggle:focus-visible) {
   outline: none !important;
   box-shadow: none !important;
 }
 
-.BngPicker :global(.rs-picker-toggle-value),
-.BngPicker :global(.rs-picker-toggle-placeholder) {
+.BoxPicker :global(.rs-picker-toggle-value),
+.BoxPicker :global(.rs-picker-toggle-placeholder) {
   position: absolute !important;
   inset: 0 18px 0 0 !important;
   width: auto !important;
@@ -177,10 +179,10 @@
   text-align: left !important;
 }
 
-.BngPicker :global(.rs-picker-toggle-value) { color: var(--awm-text) !important; }
-.BngPicker :global(.rs-picker-toggle-placeholder) { color: var(--awm-muted) !important; font-weight: 500 !important; }
+.BoxPicker :global(.rs-picker-toggle-value) { color: var(--awm-text) !important; }
+.BoxPicker :global(.rs-picker-toggle-placeholder) { color: var(--awm-muted) !important; font-weight: 500 !important; }
 
-.BngPicker :global(.rs-picker-toggle-caret) {
+.BoxPicker :global(.rs-picker-toggle-caret) {
   position: absolute !important;
   top: 50% !important;
   right: 3px !important;
@@ -190,7 +192,7 @@
   font-size: 10px !important;
 }
 
-.BngPickerMenu:global(.rs-picker-menu) {
+.BoxPickerMenu:global(.rs-picker-menu) {
   padding: 4px;
   border: 1px solid var(--awm-border);
   border-radius: 5px;
@@ -198,54 +200,29 @@
   box-shadow: 0 10px 24px rgb(0 0 0 / 30%);
 }
 
-.BngPickerMenu :global(.rs-picker-select-menu-item) {
+.BoxPickerMenu :global(.rs-picker-select-menu-item) {
   padding: 6px 10px;
   border-radius: 4px;
   color: var(--awm-text);
   font: 500 12px var(--awm-font-sans);
 }
 
-.BngPickerMenu :global(.rs-picker-select-menu-item:hover),
-.BngPickerMenu :global(.rs-picker-select-menu-item:focus) {
+.BoxPickerMenu :global(.rs-picker-select-menu-item:hover),
+.BoxPickerMenu :global(.rs-picker-select-menu-item:focus) {
   background: var(--awm-soft);
   color: var(--awm-text);
 }
 
-.BngPickerMenu :global(.rs-picker-select-menu-item.rs-picker-select-menu-item-focus) {
+.BoxPickerMenu :global(.rs-picker-select-menu-item.rs-picker-select-menu-item-focus) {
   background: var(--awm-soft);
   color: var(--awm-text);
 }
 
-.BngPickerMenu :global(.rs-picker-select-menu-item.rs-picker-select-menu-item-active) {
+.BoxPickerMenu :global(.rs-picker-select-menu-item.rs-picker-select-menu-item-active) {
   background: var(--awm-tint);
   color: var(--awm-primary);
 }
 
-.StateSelect {
-  box-sizing: border-box;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  height: 28px;
-  padding: 0 10px;
-  border: 1px solid var(--awm-border);
-  border-radius: 5px;
-  background: var(--awm-surface);
-  color: var(--awm-muted);
-  font: 500 12px var(--awm-font-sans);
-}
-
-.StateSelect select {
-  appearance: none;
-  border: 0;
-  outline: 0;
-  padding-right: 14px;
-  background: transparent;
-  color: var(--awm-text);
-  font: inherit;
-  font-weight: 600;
-  cursor: pointer;
-}
 
 .ResultsCount {
   margin-left: auto;

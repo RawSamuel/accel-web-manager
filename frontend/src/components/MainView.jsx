@@ -6,12 +6,20 @@ import classes from './MainView.module.css'
 import SessionsViewer from './SessionsViewer';
 import LogsViewer from './LogsViewer';
 import BrasList from './BrasList';
+import StatusList from './StatusList';
 
 const MainView = ({ sessionInfoReady, whatToShow, columns, sessions, gridSettings, stats, privileges, loadSessions, brasList, selectedBras, changeBras }) => {
     const [query, setQuery] = useState('');
     const [stateFilter, setStateFilter] = useState('all');
     const [columnFilters, setColumnFilters] = useState({});
     const [hiddenColumns, setHiddenColumns] = useState([]);
+    const statuses = [
+        { label: 'Todos', value: 'all' },
+        { label: 'Active', value: 'active' },
+        { label: 'Start', value: 'start' },
+        { label: 'Finishing', value: 'finish' },
+        { label: 'Unknown', value: 'unk' }
+    ];
     const sessionRows = sessions && sessions.sessions ? sessions.sessions : [];
     const sessionState = (session) => String(session.st || session.state || '').toLowerCase();
     const countByState = (state) => sessionRows.filter((session) => sessionState(session) === state).length;
@@ -54,20 +62,30 @@ const MainView = ({ sessionInfoReady, whatToShow, columns, sessions, gridSetting
                             <SearchIcon />
                             <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Buscar username, IP ou SID…" aria-label="Buscar sessões" />
                         </label>
-                        <div className={classes.BngFilter}>
-                            <span className={classes.BngFilterLabel}>BNG:</span>
-                            <BrasList className={classes.BngPicker} menuClassName={classes.BngPickerMenu} placeholder="Todos" allLabel="Todos" cleanable={false} brasList={brasList} selectedBras={selectedBras} setSelectedBras={changeBras} />
+                        <div className={classes.BoxFilter}>
+                            <span className={classes.BoxFilterLabel}>BNG:</span>
+                            <BrasList 
+                                className={classes.BoxPicker} 
+                                menuClassName={classes.BoxPickerMenu} placeholder="Todos" 
+                                allLabel="Todos" 
+                                cleanable={false} 
+                                brasList={brasList} 
+                                selectedBras={selectedBras} setSelectedBras={changeBras} 
+                            />
                         </div>
-                        <label className={classes.StateSelect}>
-                            <span>Estado:</span>
-                            <select value={stateFilter} onChange={(event) => setStateFilter(event.target.value)} aria-label="Filtrar por estado">
-                                <option value="all">todos</option>
-                                <option value="active">active</option>
-                                <option value="start">start</option>
-                                <option value="finish">finishing</option>
-                                <option value="unk">unknown</option>
-                            </select>
-                        </label>
+                        <div className={classes.BoxFilter}>
+                            <span className={classes.BoxFilterLabel}>Estado:</span>
+                            <StatusList
+                                className={classes.BoxPicker}
+                                menuClassName={classes.BoxPickerMenu}
+                                selectedStatus={stateFilter}
+                                setSelectedStatus={setStateFilter}
+                                statusList={statuses}
+                                placeholder="Todos"
+                                cleanable={false}
+                            />
+                        </div>
+
                         <span className={classes.ResultsCount}>{filteredSessions.length.toLocaleString('pt-BR')} de {sessionRows.length.toLocaleString('pt-BR')} sessões</span>
                         <details className={classes.ColumnsPicker}>
                             <summary className={classes.ColumnsButton}>
