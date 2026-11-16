@@ -1,0 +1,113 @@
+name: Build Debian
+
+on:
+  workflow_dispatch:
+  workflow_run:
+    workflows:
+      - Test Debian
+    types:
+      - completed
+
+jobs:
+  build:
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.head_repository.full_name == github.repository)
+    runs-on: ubuntu-latest
+    container:
+      image: debian:stable
+    permissions:
+      contents: read
+    steps:
+      - name: Install build prerequisites
+        run: |
+          apt-get update
+          DEBIAN_FRONTEND=noninteractive apt-get install -y \
+            ca-certificates \
+            git \
+            nodejs \
+            npm \
+            dpkg-dev \
+            xz-utils
+      - name: Check out repository code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_sha || github.ref }}
+      - name: Verify Node.js version
+        run: |
+          node -e 'const [major, minor] = process.versions.node.split(".").map(Number); if (!((major === 20 && minor >= 19) || (major >= 22 && (major > 22 || minor >= 12)))) process.exit(1);'
+      - name: Build tarball and Debian package
+        run: misc/release-scripts/release.sh
+      - name: Install Debian package
+        run: apt-get install -y --no-install-recommends ./build/release-*/*.deb
+      - name: Verify installed package
+        run: |
+          dpkg-query --show accel-web-manager
+          test -f /lib/systemd/system/accel-web-manager.service
+      - name: Upload tarball
+        uses: actions/upload-artifact@v4
+        with:
+          name: tarball
+          path: build/release-*/*.txz
+          if-no-files-found: error
+      - name: Upload Debian package
+        uses: actions/upload-artifact@v4
+        with:
+          name: debs-stable-all
+          path: build/release-*/*.deb
+          if-no-files-found: error
+
+  install-run:
+    name: Install and test Debian ${{ matrix.distro }}
+    needs: build
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        distro:
+          - oldstable
+          - stable
+          - testing
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v4
+      - name: Build Debian container with systemd
+        run: >-
+          docker build .
+          -t with-systemd/debian-${{ matrix.distro }}
+          --build-arg SOURCE=debian:${{ matrix.distro }}
+          -f .github/workflows/Deb-Based-Systemd.Dockerfile
+      - name: Download Debian package
+        uses: actions/download-artifact@v4
+        with:
+          name: debs-stable-all
+          path: debs
+      - name: Run Debian container
+        run: >-
+          docker run -d --name test-cont -p 8018:8018
+          --cgroupns=host
+          -v /sys/fs/cgroup:/sys/fs/cgroup
+          -v "$GITHUB_WORKSPACE/debs:/data"
+          --privileged with-systemd/debian-${{ matrix.distro }}
+      - name: Wait for systemd
+        run: docker exec test-cont sh -c "while ! systemctl is-system-running --wait; do sleep 1; done"
+      - name: Prevent services from starting during package installation
+        run: docker exec test-cont sh -c "printf '#!/bin/sh\nexit 0\n' > /usr/sbin/policy-rc.d"
+      - name: Install Debian package
+        run: docker exec test-cont sh -c "apt-get update && apt-get install -y /data/*.deb"
+      - name: Allow services to start
+        run: docker exec test-cont rm /usr/sbin/policy-rc.d
+      - name: Start backend service
+        run: docker exec test-cont systemctl start accel-web-manager
+      - name: Check backend service
+        run: docker exec test-cont systemctl status accel-web-manager
+      - name: Enable nginx configuration
+        run: docker exec test-cont ln -s ../sites-available/accel-web-manager /etc/nginx/sites-enabled/
+      - name: Start nginx
+        run: docker exec test-cont systemctl start nginx
+      - name: Check frontend response
+        run: curl --fail --show-error --silent --user admin:accel http://localhost:8018/
+      - name: Check backend response through nginx
+        run: curl --fail --show-error --silent --user admin:accel http://localhost:8018/api/stats/all

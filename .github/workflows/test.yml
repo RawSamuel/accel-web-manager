@@ -1,0 +1,48 @@
+name: Test Debian
+
+on:
+  workflow_dispatch:
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+    tags:
+      - "[0-9]*"
+      - "v[0-9]*"
+
+jobs:
+  backend-tests:
+    name: Test Debian ${{ matrix.distro }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        distro:
+          - oldstable
+          - stable
+          - testing
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v4
+      - name: Install dependencies and run backend tests in Debian
+        run: |
+          docker run --rm \
+            --volume "$GITHUB_WORKSPACE:/workspace" \
+            --workdir /workspace \
+            "debian:${{ matrix.distro }}" \
+            bash -euc '
+              apt-get update
+              DEBIAN_FRONTEND=noninteractive apt-get install -y \
+                python3 \
+                python3-packaging \
+                python3-pytest \
+                python3-pytest-cov \
+                python3-flask \
+                python3-flask-compress \
+                python3-flask-cors
+              cd backend
+              python3 -m pytest --verbose --cov
+              python3 -m pytest --verbose --cache-clear -Werror --cov
+            '

@@ -1,0 +1,47 @@
+name: Publish APT repository
+
+on:
+  workflow_run:
+    workflows:
+      - Build Debian
+    types:
+      - completed
+
+jobs:
+  collect-deb:
+    if: >-
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.head_branch == 'main' &&
+      github.event.workflow_run.pull_requests[0] == null
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: read
+    steps:
+      - name: Download Debian package from build
+        uses: actions/download-artifact@v4
+        with:
+          name: debs-stable-all
+          run-id: ${{ github.event.workflow_run.id }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: debs
+      - name: Re-upload Debian package for APT publisher
+        uses: actions/upload-artifact@v4
+        with:
+          name: debs-stable-all
+          path: debs/*.deb
+          if-no-files-found: error
+
+  publish:
+    needs: collect-deb
+    permissions:
+      actions: read
+      contents: read
+      pages: write
+      id-token: write
+    uses: mithro/apt-repo-action/.github/workflows/publish-apt.yml@477b0f86f1ed4a22a7d2873aa478c457bf84bb14
+    with:
+      suites: stable
+      description: "Web management interface for Accel-PPP"
+    secrets:
+      gpg-private-key: ${{ secrets.APT_GPG_PRIVATE_KEY }}
